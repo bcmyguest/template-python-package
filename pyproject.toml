@@ -1,0 +1,44 @@
+[project]
+name = "template-python-package"
+version = "0.1.0"  # bumped only by the Prepare release workflow
+description = "__DESCRIPTION__"
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.urls]
+Repository = "https://github.com/bcmyguest/template-python-package"
+
+# The console entry point — `uv run template-python-package` locally, the installed
+# command after `uv tool install`, and the Dockerfile CMD for services.
+# (The key stays quoted after substitution — kebab-case needs it in TOML.)
+[project.scripts]
+"template-python-package" = "template_python_package:main"
+
+# hatchling instead of uv init's generated uv_build block: hatchling is safe
+# to leave unversioned (so this template hardcodes no version window, unlike
+# uv_build's `>=X,<Y`) and auto-detects the src/ layout.
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# Build + install the project into the venv — what makes the entry point and
+# `import template_python_package` work from tests and a clean install.
+[tool.uv]
+package = true
+
+[tool.pyrefly]
+project-includes = ["src", "tests"]
+# Keep in lockstep with .python-version and requires-python — bump together.
+python-version = "3.13"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pyrefly>=1.4.1",
+    "pytest>=9.2.0",
+    "ruff>=0.17.5",
+]

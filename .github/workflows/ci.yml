@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
+      # --locked fails when uv.lock is stale against pyproject.toml.
+      - run: uv sync --locked
+      - run: uv run ruff check
+      - run: uv run ruff format --check
+      - run: uv run pyrefly check
+      - run: uv run -m pytest
+      - if: runner.os == 'Linux'
+        run: bash scripts/version-sync.sh
+
+  # A repo made from the template must run scripts/init.sh first.
+  placeholders:
+    if: ${{ !github.event.repository.is_template }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: |
+          if git grep -nE 'template-python-package|template_python_package|TEMPLATE_PYTHON_PACKAGE|__DESCRIPTION__'; then
+            echo "::error::template placeholders remain; run scripts/init.sh <name> \"<description>\""
+            exit 1
+          fi
